@@ -1,224 +1,234 @@
 import { useQuiz } from '../context/QuizContext';
+import { useState, useEffect } from 'react';
 
-const QuizAnalytics = () => {
+const QuizAnalytics = ({ isMockTest }) => {
+  const [showScrollTop, setShowScrollTop] = useState(false);
   const {
     questions,
     userAnswers,
     score,
     markedQuestions,
-    darkMode,
-    toggleDarkMode,
-    handleRestart
+    handleRestart,
+    darkMode
   } = useQuiz();
 
+  // Calculate statistics
   const totalQuestions = questions.length;
-  const maxScore = totalQuestions;
-  const percentage = (score / maxScore) * 100;
+  const attemptedQuestions = Object.keys(userAnswers).length;
+  const unattemptedQuestions = totalQuestions - attemptedQuestions;
+  
+  // Calculate points based on the new system
+  const calculatePoints = () => {
+    let totalPoints = 0;
+    Object.entries(userAnswers).forEach(([index, answer]) => {
+      const question = questions[index];
+      if (question.type === 'multi') {
+        const correctAnswers = new Set(question.answer);
+        const selectedAnswers = new Set(answer.selected);
+        
+        // Count correct and incorrect selections
+        const correctSelections = answer.selected.filter(ans => correctAnswers.has(ans)).length;
+        const incorrectSelections = answer.selected.filter(ans => !correctAnswers.has(ans)).length;
+        
+        if (correctSelections === question.answer.length && incorrectSelections === 0) {
+          totalPoints += 1; // All correct
+        } else if (correctSelections > 0 && incorrectSelections === 0) {
+          totalPoints += 0.5; // Partial correct
+        }
+        // Otherwise 0 points
+      } else {
+        // Single choice questions
+        if (answer.isCorrect) {
+          totalPoints += 1;
+        }
+      }
+    });
+    return totalPoints;
+  };
 
-  const markedQuestionsList = questions.filter((q, index) => markedQuestions.includes(q.id));
-  const wrongAnswersList = questions.filter((q, index) => 
-    userAnswers[index] && !userAnswers[index].isCorrect
-  );
-  const unattemptedQuestions = questions.filter((q, index) => !userAnswers[index]);
+  const points = calculatePoints();
+  const correctAnswers = score;
+  const incorrectAnswers = attemptedQuestions - correctAnswers + unattemptedQuestions; // Count unattempted as wrong
+  const percentage = ((points / totalQuestions) * 100).toFixed(1);
+
+  // Handle scroll to top visibility
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 300);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Categorize questions
+  const incorrectQuestions = questions.filter((q, index) => {
+    const userAnswer = userAnswers[index];
+    return userAnswer && !userAnswer.isCorrect;
+  });
+
+  const markedQuestionsList = questions.filter(q => markedQuestions.includes(q.id));
+  const unattemptedQuestionsList = questions.filter((q, index) => !userAnswers[index]);
 
   return (
-    <div className={`min-h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-100'}`}>
-      {/* Navbar */}
-      <nav className={`h-16 ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-md fixed top-0 left-0 right-0 z-50`}>
-        <div className="max-w-7xl mx-auto px-4 h-full flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <h1 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-              AWS Quiz App
-            </h1>
+    <div className={`space-y-8 ${darkMode ? 'text-white' : 'text-gray-900'} relative pt-16`}>
+      {/* Summary Section */}
+      <div className={`p-6 rounded-lg ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-lg`}>
+        <h2 className="text-2xl font-bold mb-4">Quiz Summary</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+            <h3 className="text-lg font-semibold mb-2">Total Questions</h3>
+            <p className="text-3xl font-bold">{totalQuestions}</p>
           </div>
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={toggleDarkMode}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            >
-              {darkMode ? '🌞' : '🌙'}
-            </button>
-            <button
-              onClick={handleRestart}
-              className="btn btn-primary"
-            >
-              Restart Quiz
-            </button>
+          <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+            <h3 className="text-lg font-semibold mb-2">Correct Answers</h3>
+            <p className="text-3xl font-bold text-green-500">{correctAnswers}</p>
           </div>
-        </div>
-      </nav>
-
-      <div className="pt-16">
-        <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-          <div className={`card ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-lg rounded-lg p-6`}>
-            <h2 className={`text-3xl font-bold mb-8 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-              Quiz Results
-            </h2>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Score Summary */}
-              <div className={`p-6 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                <h3 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                  Score Summary
-                </h3>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className={`${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Total Questions:</span>
-                    <span className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>{totalQuestions}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className={`${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Your Score:</span>
-                    <span className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>{score} / {maxScore}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className={`${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Percentage:</span>
-                    <span className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>{percentage.toFixed(1)}%</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Question Statistics */}
-              <div className={`p-6 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                <h3 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                  Question Statistics
-                </h3>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className={`${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Incorrect Answers:</span>
-                    <span className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>{wrongAnswersList.length}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className={`${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Marked Questions:</span>
-                    <span className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>{markedQuestionsList.length}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className={`${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Unattempted:</span>
-                    <span className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>{unattemptedQuestions.length}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Detailed Results */}
-            <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Incorrect Answers */}
-              {wrongAnswersList.length > 0 && (
-                <div className={`p-6 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                  <h3 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                    Incorrect Answers
-                  </h3>
-                  <div className="space-y-4">
-                    {wrongAnswersList.map((question, index) => {
-                      const answerIndex = questions.findIndex(q => q.id === question.id);
-                      const userAnswer = userAnswers[answerIndex];
-                      return (
-                        <div key={question.id} className={`p-4 rounded-lg ${darkMode ? 'bg-gray-600' : 'bg-white'} shadow`}>
-                          <p className={`font-medium mb-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                            {question.question}
-                          </p>
-                          <div className="space-y-2">
-                            <p className="text-sm">
-                              <span className={`${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Your answer: </span>
-                              <span className="text-red-600">
-                                {Array.isArray(userAnswer.selected) ? userAnswer.selected.join(', ') : userAnswer.selected}
-                              </span>
-                            </p>
-                            <p className="text-sm">
-                              <span className={`${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Correct answer: </span>
-                              <span className="text-green-600">
-                                {Array.isArray(question.answer) ? question.answer.join(', ') : question.answer}
-                              </span>
-                            </p>
-                            <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                              Score: {userAnswer.score} points
-                            </p>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* Marked Questions */}
-              {markedQuestionsList.length > 0 && (
-                <div className={`p-6 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                  <h3 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                    Marked Questions
-                  </h3>
-                  <div className="space-y-4">
-                    {markedQuestionsList.map((question, index) => {
-                      const answerIndex = questions.findIndex(q => q.id === question.id);
-                      const userAnswer = userAnswers[answerIndex];
-                      return (
-                        <div key={question.id} className={`p-4 rounded-lg ${darkMode ? 'bg-gray-600' : 'bg-white'} shadow`}>
-                          <p className={`font-medium mb-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                            {question.question}
-                          </p>
-                          <div className="space-y-2">
-                            {userAnswer ? (
-                              <>
-                                <p className="text-sm">
-                                  <span className={`${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Your answer: </span>
-                                  <span className={userAnswer.isCorrect ? 'text-green-600' : 'text-red-600'}>
-                                    {Array.isArray(userAnswer.selected) ? userAnswer.selected.join(', ') : userAnswer.selected}
-                                  </span>
-                                </p>
-                                <p className="text-sm">
-                                  <span className={`${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Correct answer: </span>
-                                  <span className="text-green-600">
-                                    {Array.isArray(question.answer) ? question.answer.join(', ') : question.answer}
-                                  </span>
-                                </p>
-                                <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                                  Score: {userAnswer.score} points
-                                </p>
-                              </>
-                            ) : (
-                              <p className="text-sm">
-                                <span className={`${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Correct answer: </span>
-                                <span className="text-green-600">
-                                  {Array.isArray(question.answer) ? question.answer.join(', ') : question.answer}
-                                </span>
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* Unattempted Questions */}
-              {unattemptedQuestions.length > 0 && (
-                <div className={`p-6 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'} lg:col-span-2`}>
-                  <h3 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                    Unattempted Questions
-                  </h3>
-                  <div className="space-y-4">
-                    {unattemptedQuestions.map((question) => (
-                      <div key={question.id} className={`p-4 rounded-lg ${darkMode ? 'bg-gray-600' : 'bg-white'} shadow`}>
-                        <p className={`font-medium mb-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                          {question.question}
-                        </p>
-                        <p className="text-sm">
-                          <span className={`${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Correct answer: </span>
-                          <span className="text-green-600">
-                            {Array.isArray(question.answer) ? question.answer.join(', ') : question.answer}
-                          </span>
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+          <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+            <h3 className="text-lg font-semibold mb-2">Wrong Answers</h3>
+            <p className="text-3xl font-bold text-red-500">{incorrectAnswers}</p>
+          </div>
+          <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+            <h3 className="text-lg font-semibold mb-2">Points Obtained</h3>
+            <p className="text-3xl font-bold text-blue-500">{points.toFixed(1)}</p>
+          </div>
+          <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+            <h3 className="text-lg font-semibold mb-2">Percentage</h3>
+            <p className="text-3xl font-bold text-purple-500">{percentage}%</p>
+            <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
+              <div 
+                className="bg-purple-600 h-2.5 rounded-full" 
+                style={{ width: `${percentage}%` }}
+              ></div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Questions Review Section */}
+      <div className="space-y-6">
+        {/* Incorrect and Marked Questions Side by Side */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Incorrect Questions */}
+          <div className={`p-6 rounded-lg ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-lg`}>
+            <h2 className="text-2xl font-bold mb-4">Incorrect Answers</h2>
+            {incorrectQuestions.length > 0 ? (
+              <div className="space-y-6">
+                {incorrectQuestions.map((question, index) => {
+                  const userAnswer = userAnswers[questions.indexOf(question)];
+                  return (
+                    <div key={index} className="border-b pb-4 last:border-b-0">
+                      <p className="font-semibold mb-2">{question.question}</p>
+                      <p className="text-red-500 mb-1">
+                        Your Answer: {userAnswer.selected.join(', ')}
+                      </p>
+                      <p className="text-green-500">
+                        Correct Answer: {Array.isArray(question.answer) ? question.answer.join(', ') : question.answer}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-gray-500">No incorrect answers</p>
+            )}
+          </div>
+
+          {/* Marked Questions */}
+          <div className={`p-6 rounded-lg ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-lg`}>
+            <h2 className="text-2xl font-bold mb-4">Marked Questions</h2>
+            {markedQuestionsList.length > 0 ? (
+              <div className="space-y-6">
+                {markedQuestionsList.map((question, index) => {
+                  const userAnswer = userAnswers[questions.indexOf(question)];
+                  return (
+                    <div key={index} className="border-b pb-4 last:border-b-0">
+                      <p className="font-semibold mb-2">{question.question}</p>
+                      {userAnswer ? (
+                        <>
+                          <p className={`${userAnswer.isCorrect ? 'text-green-500' : 'text-red-500'} mb-1`}>
+                            Your Answer: {userAnswer.selected.join(', ')}
+                          </p>
+                          <p className="text-green-500">
+                            Correct Answer: {Array.isArray(question.answer) ? question.answer.join(', ') : question.answer}
+                          </p>
+                        </>
+                      ) : (
+                        <p className="text-green-500">
+                          Correct Answer: {Array.isArray(question.answer) ? question.answer.join(', ') : question.answer}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-gray-500">No marked questions</p>
+            )}
+          </div>
+        </div>
+
+        {/* Unattempted Questions */}
+        <div className={`p-6 rounded-lg ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-lg`}>
+          <h2 className="text-2xl font-bold mb-4">Unattempted Questions</h2>
+          {unattemptedQuestionsList.length > 0 ? (
+            <div className="space-y-6">
+              {unattemptedQuestionsList.map((question, index) => (
+                <div key={index} className="border-b pb-4 last:border-b-0">
+                  <p className="font-semibold mb-2">{question.question}</p>
+                  <p className="text-green-500">
+                    Correct Answer: {Array.isArray(question.answer) ? question.answer.join(', ') : question.answer}
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-500">No unattempted questions</p>
+          )}
+        </div>
+      </div>
+
+      {/* Action Button at Bottom */}
+      <div className="flex justify-center mb-8 sticky bottom-0 bg-white dark:bg-gray-900 py-4">
+        <button
+          onClick={handleRestart}
+          className="btn btn-primary"
+        >
+          {isMockTest ? 'Start New Mock Test' : 'Start New Practice Quiz'}
+        </button>
+      </div>
+
+      {/* Scroll to Top Button */}
+      {showScrollTop && (
+        <button
+          onClick={scrollToTop}
+          className={`fixed bottom-24 right-8 p-3 rounded-full shadow-lg transition-all duration-300 ${
+            darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-white hover:bg-gray-100'
+          }`}
+          aria-label="Scroll to top"
+        >
+          <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            className="h-6 w-6" 
+            fill="none" 
+            viewBox="0 0 24 24" 
+            stroke="currentColor"
+          >
+            <path 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              strokeWidth={2} 
+              d="M5 10l7-7m0 0l7 7m-7-7v18" 
+            />
+          </svg>
+        </button>
+      )}
     </div>
   );
 };
 
-export default QuizAnalytics; 
+export default QuizAnalytics;

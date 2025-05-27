@@ -8,26 +8,22 @@
   }
   
   .btn-primary {
-    @apply bg-blue-600 text-white hover:bg-blue-700;
+    @apply bg-blue-500 text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
   }
   
   .btn-secondary {
-    @apply bg-gray-200 text-gray-800 hover:bg-gray-300;
+    @apply bg-gray-200 text-gray-700 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600;
   }
   
   .card {
-    @apply bg-white rounded-xl shadow-md p-6;
+    @apply bg-white rounded-xl shadow-lg p-6;
   }
   
   .option-btn {
-    @apply w-full p-4 text-left rounded-lg border-2 border-gray-200 hover:border-blue-500 transition-colors duration-200;
+    @apply transition-colors duration-200;
   }
   
-  .option-btn.correct {
-    @apply border-green-500 bg-green-50;
-  }
-  
-  .option-btn.incorrect {
-    @apply border-red-500 bg-red-50;
+  .option-btn:disabled {
+    @apply cursor-not-allowed opacity-75;
   }
 }

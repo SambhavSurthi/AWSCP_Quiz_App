@@ -1,10 +1,11 @@
 import { useQuiz } from '../context/QuizContext';
 import QuestionGrid from './QuestionGrid';
 import QuizAnalytics from './QuizAnalytics';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const Quiz = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const {
     questions,
     currentQuestionIndex,
@@ -16,6 +17,8 @@ const Quiz = () => {
     markedQuestions,
     darkMode,
     showSelectOptionMessage,
+    isLoading,
+    error,
     handleAnswerSelect,
     clearSelection,
     handleConfirmAnswer,
@@ -25,16 +28,64 @@ const Quiz = () => {
     toggleMarkQuestion,
     toggleDarkMode,
     jumpToQuestion,
-    setShowResults
+    setShowResults,
+    startPracticeQuiz
   } = useQuiz();
 
+  // Initialize practice quiz when component mounts
+  useEffect(() => {
+    startPracticeQuiz();
+  }, []);
+
+  const handleFinishQuiz = () => {
+    setShowConfirmDialog(true);
+  };
+
+  const confirmFinishQuiz = () => {
+    setShowConfirmDialog(false);
+    setShowResults(true);
+  };
+
+  const cancelFinishQuiz = () => {
+    setShowConfirmDialog(false);
+  };
+
   const currentQuestion = questions[currentQuestionIndex];
+
+  if (isLoading) {
+    return (
+      <div className="fixed inset-0 bg-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <h2 className="text-2xl font-bold mb-4">Loading questions...</h2>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="fixed inset-0 bg-gray-100 flex items-center justify-center">
+        <div className="text-center max-w-md mx-4">
+          <div className="text-red-500 text-5xl mb-4">⚠️</div>
+          <h2 className="text-2xl font-bold mb-4">Error Loading Questions</h2>
+          <p className="text-gray-600 mb-6">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="btn btn-primary"
+          >
+            Refresh Page
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (showResults) {
     return (
       <div className="fixed inset-0 bg-gray-100 overflow-y-auto">
         <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-          <QuizAnalytics />
+          <QuizAnalytics isMockTest={false} />
         </div>
       </div>
     );
@@ -106,7 +157,7 @@ const Quiz = () => {
         </div>
       </nav>
 
-      <div className="flex h-full pt-16">
+      <div className="flex h-screen pt-16">
         {/* Sidebar */}
         <div 
           className={`
@@ -122,7 +173,7 @@ const Quiz = () => {
             </div>
             <div className={`p-4 border-t ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
               <button
-                onClick={() => setShowResults(true)}
+                onClick={handleFinishQuiz}
                 className="w-full btn btn-primary"
               >
                 Finish Quiz
@@ -137,6 +188,30 @@ const Quiz = () => {
             className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
             onClick={() => setIsSidebarOpen(false)}
           />
+        )}
+
+        {/* Confirmation Dialog */}
+        {showConfirmDialog && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} p-6 rounded-lg shadow-xl max-w-md w-full mx-4`}>
+              <h3 className="text-xl font-bold mb-4">Confirm Finish Quiz</h3>
+              <p className="mb-6">Are you sure you want to finish the quiz? You will be able to review your answers and see the results.</p>
+              <div className="flex justify-end space-x-4">
+                <button
+                  onClick={cancelFinishQuiz}
+                  className="btn btn-secondary"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmFinishQuiz}
+                  className="btn btn-primary"
+                >
+                  Finish Quiz
+                </button>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Main Content */}

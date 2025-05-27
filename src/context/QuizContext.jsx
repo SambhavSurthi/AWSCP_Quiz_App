@@ -16,23 +16,46 @@ export const QuizProvider = ({ children }) => {
   const [markedQuestions, setMarkedQuestions] = useState([]);
   const [darkMode, setDarkMode] = useState(false);
   const [showSelectOptionMessage, setShowSelectOptionMessage] = useState(false);
+  const [isMockTest, setIsMockTest] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(90 * 60); // 90 minutes in seconds
+  const [isTestStarted, setIsTestStarted] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // Load questions and initialize state
   useEffect(() => {
+    setIsLoading(true);
+    setError(null);
+    
     fetch('/questions.json')
-      .then(response => response.json())
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to load questions');
+        }
+        return response.json();
+      })
       .then(data => {
         setQuestions(data.questions);
-        shuffleQuestions(data.questions);
+        // Initialize practice quiz with all questions
+        setShuffledQuestions(data.questions);
+        setIsLoading(false);
       })
-      .catch(error => console.error('Error loading questions:', error));
+      .catch(error => {
+        console.error('Error loading questions:', error);
+        setError('Failed to load questions. Please try refreshing the page.');
+        setIsLoading(false);
+      });
 
     // Load saved state from localStorage
     const savedState = localStorage.getItem('quizState');
     if (savedState) {
-      const { markedQuestions: savedMarked, darkMode: savedDarkMode } = JSON.parse(savedState);
-      setMarkedQuestions(savedMarked || []);
-      setDarkMode(savedDarkMode || false);
+      try {
+        const { markedQuestions: savedMarked, darkMode: savedDarkMode } = JSON.parse(savedState);
+        setMarkedQuestions(savedMarked || []);
+        setDarkMode(savedDarkMode || false);
+      } catch (error) {
+        console.error('Error loading saved state:', error);
+      }
     }
   }, []);
 
@@ -44,10 +67,86 @@ export const QuizProvider = ({ children }) => {
     }));
   }, [markedQuestions, darkMode]);
 
-  const shuffleQuestions = (questionsList) => {
-    const shuffled = [...questionsList].sort(() => Math.random() - 0.5);
-    setShuffledQuestions(shuffled);
-  };
+  // Timer effect for mock test
+  useEffect(() => {
+    if (!isMockTest || !isTestStarted || showResults) return;
+
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          // Auto submit when time expires
+          setShowResults(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    // Save test state to localStorage
+    const saveTestState = () => {
+      if (isMockTest && isTestStarted && !showResults) {
+        localStorage.setItem('mockTestState', JSON.stringify({
+          timeLeft,
+          currentQuestionIndex,
+          selectedAnswers,
+          userAnswers,
+          markedQuestions,
+          score
+        }));
+      }
+    };
+
+    // Save state every 30 seconds
+    const saveInterval = setInterval(saveTestState, 30000);
+
+    // Handle beforeunload event
+    const handleBeforeUnload = (e) => {
+      if (isMockTest && isTestStarted && !showResults) {
+        saveTestState();
+        e.preventDefault();
+        e.returnValue = 'Are you sure you want to leave? Your progress will be saved.';
+        return e.returnValue;
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      clearInterval(timer);
+      clearInterval(saveInterval);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [isMockTest, isTestStarted, showResults]);
+
+  // Load mock test state on mount
+  useEffect(() => {
+    if (isMockTest) {
+      const savedTestState = localStorage.getItem('mockTestState');
+      if (savedTestState) {
+        try {
+          const {
+            timeLeft: savedTime,
+            currentQuestionIndex: savedIndex,
+            selectedAnswers: savedAnswers,
+            userAnswers: savedUserAnswers,
+            markedQuestions: savedMarked,
+            score: savedScore
+          } = JSON.parse(savedTestState);
+
+          setTimeLeft(savedTime);
+          setCurrentQuestionIndex(savedIndex);
+          setSelectedAnswers(savedAnswers);
+          setUserAnswers(savedUserAnswers);
+          setMarkedQuestions(savedMarked);
+          setScore(savedScore);
+          setIsTestStarted(true);
+        } catch (error) {
+          console.error('Error loading mock test state:', error);
+        }
+      }
+    }
+  }, [isMockTest]);
 
   const handleAnswerSelect = (answer) => {
     if (!isAnswerConfirmed) {
@@ -84,13 +183,22 @@ export const QuizProvider = ({ children }) => {
     const correctSelections = selected.filter(ans => correctSet.has(ans)).length;
     const incorrectSelections = selected.filter(ans => !correctSet.has(ans)).length;
     
-    // All correct and no incorrect = full points
-    if (correctSelections === correct.length && incorrectSelections === 0) {
-      return 1;
+    // For multiple choice questions
+    if (Array.isArray(correct)) {
+      // All correct and no incorrect = 1 point
+      if (correctSelections === correct.length && incorrectSelections === 0) {
+        return 1;
+      }
+      // Some correct and no incorrect = 0.5 points
+      if (correctSelections > 0 && incorrectSelections === 0) {
+        return 0.5;
+      }
+      // Any incorrect selections = 0 points
+      return 0;
     }
     
-    // Any other case (partial correct or incorrect) = no points
-    return 0;
+    // For single choice questions
+    return selected[0] === correct ? 1 : 0;
   };
 
   const handleConfirmAnswer = () => {
@@ -99,22 +207,27 @@ export const QuizProvider = ({ children }) => {
       return;
     }
     
-    setIsAnswerConfirmed(true);
     const currentQuestion = shuffledQuestions[currentQuestionIndex];
-    const isCorrect = currentQuestion.type === 'multi'
-      ? calculateScore(selectedAnswers, currentQuestion.answer)
-      : selectedAnswers[0] === currentQuestion.answer ? 1 : 0;
+    const points = calculateScore(selectedAnswers, currentQuestion.answer);
     
-    setScore(prev => prev + isCorrect);
+    setScore(prev => prev + points);
     setUserAnswers(prev => ({
       ...prev,
       [currentQuestionIndex]: {
         selected: [...selectedAnswers],
-        isCorrect,
-        score: isCorrect,
-        correctAnswers: currentQuestion.answer // Store correct answers for reference
+        isCorrect: points > 0,
+        score: points,
+        correctAnswers: currentQuestion.answer,
+        question: currentQuestion.question
       }
     }));
+
+    // For mock test, automatically move to next question
+    if (isMockTest) {
+      handleNext();
+    } else {
+      setIsAnswerConfirmed(true);
+    }
   };
 
   const handleNext = () => {
@@ -124,14 +237,18 @@ export const QuizProvider = ({ children }) => {
       setIsAnswerConfirmed(!!userAnswers[currentQuestionIndex + 1]);
       setShowSelectOptionMessage(false);
     } else {
-      // If we've completed 10 questions, restart from the beginning
-      if (Object.keys(userAnswers).length >= 10) {
+      if (isMockTest) {
         setShowResults(true);
       } else {
-        setCurrentQuestionIndex(0);
-        setSelectedAnswers(userAnswers[0]?.selected || []);
-        setIsAnswerConfirmed(!!userAnswers[0]);
-        setShowSelectOptionMessage(false);
+        // If we've completed 10 questions, restart from the beginning
+        if (Object.keys(userAnswers).length >= 10) {
+          setShowResults(true);
+        } else {
+          setCurrentQuestionIndex(0);
+          setSelectedAnswers(userAnswers[0]?.selected || []);
+          setIsAnswerConfirmed(!!userAnswers[0]);
+          setShowSelectOptionMessage(false);
+        }
       }
     }
   };
@@ -153,7 +270,9 @@ export const QuizProvider = ({ children }) => {
     setShowResults(false);
     setUserAnswers({});
     setShowSelectOptionMessage(false);
-    shuffleQuestions(questions);
+    if (isMockTest) {
+      setTimeLeft(90 * 60);
+    }
   };
 
   const toggleMarkQuestion = (questionId) => {
@@ -178,6 +297,35 @@ export const QuizProvider = ({ children }) => {
     }
   };
 
+  const startMockTest = () => {
+    // Clear any saved test state
+    localStorage.removeItem('mockTestState');
+    
+    // Randomly select 65 questions
+    const shuffled = [...questions].sort(() => Math.random() - 0.5);
+    const selectedQuestions = shuffled.slice(0, 65);
+    setShuffledQuestions(selectedQuestions);
+    setIsMockTest(true);
+    setIsTestStarted(true);
+    setTimeLeft(90 * 60); // Reset timer to 90 minutes
+    handleRestart();
+  };
+
+  const startPracticeQuiz = () => {
+    // For practice quiz, use all questions
+    const shuffled = [...questions].sort(() => Math.random() - 0.5);
+    setShuffledQuestions(shuffled);
+    setIsMockTest(false);
+    setIsTestStarted(false);
+    handleRestart();
+  };
+
+  const formatTime = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+
   const value = {
     questions: shuffledQuestions,
     currentQuestionIndex,
@@ -189,6 +337,12 @@ export const QuizProvider = ({ children }) => {
     markedQuestions,
     darkMode,
     showSelectOptionMessage,
+    isMockTest,
+    timeLeft,
+    isTestStarted,
+    isLoading,
+    error,
+    formatTime,
     handleAnswerSelect,
     clearSelection,
     handleConfirmAnswer,
@@ -198,7 +352,9 @@ export const QuizProvider = ({ children }) => {
     toggleMarkQuestion,
     toggleDarkMode,
     jumpToQuestion,
-    setShowResults
+    setShowResults,
+    startMockTest,
+    startPracticeQuiz
   };
 
   return (
