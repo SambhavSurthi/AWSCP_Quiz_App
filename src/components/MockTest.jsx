@@ -224,7 +224,7 @@ const MockTest = () => {
                 </div>
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
-                    <h3 className="text-2xl font-bold mb-2">{currentQuestion.question}</h3>
+                    <h3 className="text-2xl text-xl md:text-2xl font-bold mb-2">{currentQuestion.question}</h3>
                     {currentQuestion.type === 'multi' && (
                       <p className="text-sm text-blue-600 mb-4">
                         Multiple answers can be selected

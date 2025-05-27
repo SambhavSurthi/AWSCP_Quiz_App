@@ -133,14 +133,16 @@ const Quiz = () => {
   };
 
   return (
-    <div className={`fixed inset-0 ${darkMode ? 'bg-gray-900' : 'bg-gray-100'}`}>
+    <div className={`relative min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-100'}`}>
       {/* Navbar */}
       <nav className={`h-16 ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-md fixed top-0 left-0 right-0 z-50`}>
         <div className="max-w-7xl mx-auto px-4 h-full flex items-center justify-between">
           <div className="flex items-center space-x-4">
+            {/* Mobile Sidebar Toggle */}
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
               className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors lg:hidden"
+              aria-label="Toggle sidebar"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -148,9 +150,11 @@ const Quiz = () => {
             </button>
             <h1 className="text-xl font-bold">AWS Quiz App</h1>
           </div>
+          {/* Dark Mode Toggle */}
           <button
             onClick={toggleDarkMode}
             className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            aria-label="Toggle dark mode"
           >
             {darkMode ? '🌞' : '🌙'}
           </button>
@@ -225,7 +229,7 @@ const Quiz = () => {
               </div>
             </div>
 
-            <div className={`card ${darkMode ? 'bg-gray-800 text-white' : ''}`}>
+            <div className={`card ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
               <div className="mb-6">
                 <div className="flex justify-between items-center mb-4">
                   <h2 className={`text-xl font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
@@ -240,7 +244,7 @@ const Quiz = () => {
                 </div>
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
-                    <h3 className="text-2xl font-bold mb-2">{currentQuestion.question}</h3>
+                    <h3 className="text-2xl text-xl md:text-lg font-bold mb-2">{currentQuestion.question}</h3>
                     {currentQuestion.type === 'multi' && (
                       <p className="text-sm text-blue-600 mb-4">
                         Multiple answers can be selected
