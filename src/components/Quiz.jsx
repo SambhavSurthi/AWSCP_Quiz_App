@@ -54,10 +54,10 @@ const Quiz = () => {
 
   if (isLoading) {
     return (
-      <div className="fixed inset-0 bg-gray-100 flex items-center justify-center">
+      <div className={`fixed inset-0 ${darkMode ? 'bg-gray-900' : 'bg-gray-100'} flex items-center justify-center`}>
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <h2 className="text-2xl font-bold mb-4">Loading questions...</h2>
+          <h2 className={`text-2xl font-bold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Loading questions...</h2>
         </div>
       </div>
     );
@@ -65,11 +65,11 @@ const Quiz = () => {
 
   if (error) {
     return (
-      <div className="fixed inset-0 bg-gray-100 flex items-center justify-center">
+      <div className={`fixed inset-0 ${darkMode ? 'bg-gray-900' : 'bg-gray-100'} flex items-center justify-center`}>
         <div className="text-center max-w-md mx-4">
           <div className="text-red-500 text-5xl mb-4">⚠️</div>
-          <h2 className="text-2xl font-bold mb-4">Error Loading Questions</h2>
-          <p className="text-gray-600 mb-6">{error}</p>
+          <h2 className={`text-2xl font-bold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Error Loading Questions</h2>
+          <p className={`${darkMode ? 'text-gray-300' : 'text-gray-600'} mb-6`}>{error}</p>
           <button
             onClick={() => window.location.reload()}
             className="btn btn-primary"
@@ -83,7 +83,7 @@ const Quiz = () => {
 
   if (showResults) {
     return (
-      <div className="fixed inset-0 bg-gray-100 overflow-y-auto">
+      <div className={`fixed inset-0 ${darkMode ? 'bg-gray-900' : 'bg-gray-100'} overflow-y-auto`}>
         <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
           <QuizAnalytics isMockTest={false} />
         </div>
@@ -93,9 +93,9 @@ const Quiz = () => {
 
   if (!currentQuestion) {
     return (
-      <div className="fixed inset-0 bg-gray-100 flex items-center justify-center">
+      <div className={`fixed inset-0 ${darkMode ? 'bg-gray-900' : 'bg-gray-100'} flex items-center justify-center`}>
         <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Loading questions...</h2>
+          <h2 className={`text-2xl font-bold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Loading questions...</h2>
         </div>
       </div>
     );
@@ -148,7 +148,7 @@ const Quiz = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
-            <h1 className="text-xl font-bold">AWS Quiz App</h1>
+            <h1 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>AWS Practice Quiz</h1>
           </div>
           {/* Dark Mode Toggle */}
           <button
@@ -198,18 +198,24 @@ const Quiz = () => {
         {showConfirmDialog && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} p-6 rounded-lg shadow-xl max-w-md w-full mx-4`}>
-              <h3 className="text-xl font-bold mb-4">Confirm Finish Quiz</h3>
-              <p className="mb-6">Are you sure you want to finish the quiz? You will be able to review your answers and see the results.</p>
+              <h3 className={`text-xl font-bold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Finish Quiz?</h3>
+              <p className={`${darkMode ? 'text-gray-300' : 'text-gray-600'} mb-6`}>
+                Are you sure you want to finish the quiz? You can review your answers before submitting.
+              </p>
               <div className="flex justify-end space-x-4">
                 <button
                   onClick={cancelFinishQuiz}
-                  className="btn btn-secondary"
+                  className={`px-4 py-2 rounded-md ${
+                    darkMode 
+                      ? 'bg-gray-700 text-white hover:bg-gray-600' 
+                      : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+                  }`}
                 >
                   Cancel
                 </button>
                 <button
                   onClick={confirmFinishQuiz}
-                  className="btn btn-primary"
+                  className="px-4 py-2 rounded-md bg-blue-500 text-white hover:bg-blue-600"
                 >
                   Finish Quiz
                 </button>
@@ -244,7 +250,7 @@ const Quiz = () => {
                 </div>
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
-                    <h3 className="text-2xl text-xl md:text-lg font-bold mb-2">{currentQuestion.question}</h3>
+                    <h3 className={`text-2xl text-xl md:text-lg font-bold mb-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>{currentQuestion.question}</h3>
                     {currentQuestion.type === 'multi' && (
                       <p className="text-sm text-blue-600 mb-4">
                         Multiple answers can be selected
@@ -268,19 +274,23 @@ const Quiz = () => {
               <div className="space-y-4 mb-8">
                 {currentQuestion.options.map((option, index) => {
                   const status = getOptionStatus(option);
+                  const isSelected = selectedAnswers.includes(option);
+                  const isConfirmed = isAnswerConfirmed;
+
                   return (
                     <button
                       key={index}
                       onClick={() => handleAnswerSelect(option)}
-                      disabled={isAnswerConfirmed}
+                      disabled={isConfirmed}
                       className={`
                         option-btn w-full text-left p-4 rounded-lg border-2 transition-colors
-                        ${status === 'correct' ? 'border-green-500 bg-green-50' : ''}
-                        ${status === 'incorrect' ? 'border-red-500 bg-red-50' : ''}
-                        ${status === 'unselected' ? 'border-gray-200' : ''}
-                        ${!isAnswerConfirmed && selectedAnswers.includes(option) ? 'border-blue-500 bg-blue-50' : ''}
-                        ${!isAnswerConfirmed && !selectedAnswers.includes(option) ? 'hover:border-blue-300' : ''}
-                        ${isAnswerConfirmed ? 'cursor-default' : 'cursor-pointer'}
+                        ${status === 'correct' ? 'border-green-500 bg-green-50 text-gray-900' : ''}
+                        ${status === 'incorrect' ? 'border-red-500 bg-red-50 text-gray-900' : ''}
+                        ${status === 'correct-unselected' ? 'border-green-500 bg-green-50 text-gray-900' : ''}
+                        ${status === 'unselected' && !isConfirmed ? (darkMode ? 'border-gray-700 text-white hover:border-blue-600' : 'border-gray-200 text-gray-900 hover:border-blue-300') : ''}
+                        ${isSelected && !isConfirmed ? 'border-blue-500 bg-blue-50 text-gray-900' : ''}
+                        ${isConfirmed ? 'cursor-default' : 'cursor-pointer'}
+                         ${!isConfirmed && !isSelected && status === 'unselected' ? (darkMode ? 'text-white' : 'text-gray-900') : ''}
                       `}
                     >
                       {option}

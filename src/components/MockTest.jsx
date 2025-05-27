@@ -73,7 +73,7 @@ const MockTest = () => {
 
   if (showResults) {
     return (
-      <div className="fixed inset-0 bg-gray-100 overflow-y-auto">
+      <div className={`fixed inset-0 ${darkMode ? 'bg-gray-900' : 'bg-gray-100'} overflow-y-auto`}>
         <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
           <QuizAnalytics isMockTest={true} />
         </div>
@@ -85,9 +85,9 @@ const MockTest = () => {
 
   if (!currentQuestion) {
     return (
-      <div className="fixed inset-0 bg-gray-100 flex items-center justify-center">
+      <div className={`fixed inset-0 ${darkMode ? 'bg-gray-900' : 'bg-gray-100'} flex items-center justify-center`}>
         <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Loading questions...</h2>
+          <h2 className={`text-2xl font-bold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Loading questions...</h2>
         </div>
       </div>
     );
@@ -101,13 +101,15 @@ const MockTest = () => {
           <div className="flex items-center space-x-4">
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors lg:hidden"
+              className={`p-2 rounded-lg transition-colors lg:hidden ${
+                darkMode ? 'hover:bg-gray-700 text-white' : 'hover:bg-gray-100 text-gray-900'
+              }`}
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
-            <h1 className="text-xl font-bold">AWS Mock Test</h1>
+            <h1 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>AWS Mock Test</h1>
           </div>
           <div className="flex items-center space-x-4">
             <div className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'} ${timeLeft <= 300 ? 'text-red-500 animate-pulse' : ''}`}>
@@ -120,7 +122,9 @@ const MockTest = () => {
             </div>
             <button
               onClick={toggleDarkMode}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              className={`p-2 rounded-lg transition-colors ${
+                darkMode ? 'hover:bg-gray-700 text-white' : 'hover:bg-gray-100 text-gray-900'
+              }`}
             >
               {darkMode ? '🌞' : '🌙'}
             </button>
@@ -165,12 +169,18 @@ const MockTest = () => {
         {showConfirmDialog && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} p-6 rounded-lg shadow-xl max-w-md w-full mx-4`}>
-              <h3 className="text-xl font-bold mb-4">Confirm Submit Test</h3>
-              <p className="mb-6">Are you sure you want to submit your test? You will not be able to change your answers after submission.</p>
+              <h3 className={`text-xl font-bold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Confirm Submit Test</h3>
+              <p className={`mb-6 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                Are you sure you want to submit your test? You will not be able to change your answers after submission.
+              </p>
               <div className="flex justify-end space-x-4">
                 <button
                   onClick={() => setShowConfirmDialog(false)}
-                  className="btn btn-secondary"
+                  className={`px-4 py-2 rounded-md ${
+                    darkMode 
+                      ? 'bg-gray-700 text-white hover:bg-gray-600' 
+                      : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+                  }`}
                 >
                   Cancel
                 </button>
@@ -179,7 +189,7 @@ const MockTest = () => {
                     setShowConfirmDialog(false);
                     setShowResults(true);
                   }}
-                  className="btn btn-primary"
+                  className="px-4 py-2 rounded-md bg-blue-500 text-white hover:bg-blue-600"
                 >
                   Submit Test
                 </button>
@@ -192,7 +202,7 @@ const MockTest = () => {
         <div className="flex-1 overflow-y-auto">
           <div className="max-w-3xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
             {timeLeft <= 300 && timeLeft > 0 && (
-              <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg text-center animate-pulse">
+              <div className={`mb-4 p-4 ${darkMode ? 'bg-red-900 text-red-200' : 'bg-red-100 text-red-700'} rounded-lg text-center animate-pulse`}>
                 <div className="flex items-center justify-center space-x-2">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -252,7 +262,8 @@ const MockTest = () => {
                     onClick={() => handleAnswerSelect(option)}
                     className={`
                       option-btn w-full text-left p-4 rounded-lg border-2 transition-colors
-                      ${selectedAnswers.includes(option) ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}
+                      ${selectedAnswers.includes(option) ? 'border-blue-500 bg-blue-50 text-gray-900' : 'border-gray-200'}
+                      ${!selectedAnswers.includes(option) ? darkMode ? 'text-white' : 'text-gray-900' : ''}
                       hover:border-blue-300
                     `}
                   >

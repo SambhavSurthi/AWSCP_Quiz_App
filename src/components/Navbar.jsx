@@ -12,9 +12,9 @@ const Navbar = () => {
   return (
     <nav className={`h-16 ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-md fixed top-0 left-0 right-0 z-50`}>
       <div className="max-w-7xl mx-auto px-4 h-full flex items-center justify-between">
-        <div className="flex items-center space-x-8">
-          <Link to="/" className="text-xl font-bold">
-            AWS Quiz App
+        <div className={` ${darkMode ? 'bg-gray-800' : 'bg-white'} flex items-center space-x-8`}>
+          <Link to="/" className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-black'}`} >
+            AWS-CP Quiz
           </Link>
           <div className="flex space-x-4">
             <Link
