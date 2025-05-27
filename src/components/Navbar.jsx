@@ -18,9 +18,9 @@ const Navbar = () => {
           </Link>
           <div className="flex space-x-4">
             <Link
-              to="/"
+              to="/practice-quiz"
               className={`px-3 py-2 rounded-md text-sm font-medium ${
-                isActive('/')
+                isActive('/practice-quiz')
                   ? 'bg-blue-500 text-white'
                   : darkMode
                   ? 'text-gray-300 hover:bg-gray-700'
