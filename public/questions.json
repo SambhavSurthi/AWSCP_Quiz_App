@@ -16721,8 +16721,12 @@
       "question": "A company wants to ensure that two Amazon EC2 instances are in separate data centers with minimal communication latency between the data centers. How can the company meet this requirement?",
       "type": "single",
       "options": [
-        "Place the EC2 instances in two separate AWS Regions connected with a VPC peering"
-      ]
+        "Place the EC2 instances in two separate AWS Regions connected with a VPC peering connection.",
+        "Place the EC2 instances in two separate Availability Zones within the same AWS Region.",
+        "Place one EC2 instance on premises and the other in an AWS Region. Then connect them by using an AWS VPN connection.",
+        "Place both EC2 instances in a placement group for dedicated bandwidth."
+      ],
+      "answer": "Place both EC2 instances in a placement group for dedicated bandwidth."
     },
     {
       "id": 1454,
@@ -17747,9 +17751,12 @@
       "question": "How does consolidated billing help reduce costs for a company that has multiple AWS accounts?",
       "type": "single",
       "options": [
-        "It aggregates usage across accounts so that the company can reach volume discount"
+        "It aggregates usage across accounts so that the company can reach volume discount thresholds sooner.",
+        "It offers an additional 5% discount on purchases of AII Upfront Reserved Instances.",
+        "It provides a simplified billing invoice that the company can process more quickly than a standard invoice.",
+        "It gives AWS resellers the ability to bill their customers for usage."
       ],
-      "answer": "It aggregates usage across accounts so that the company can reach volume discount"
+      "answer": "It aggregates usage across accounts so that the company can reach volume discount thresholds sooner."
     },
     {
       "id": 1535,
@@ -17838,12 +17845,18 @@
     {
       "id": 1542,
       "question": "A large organization has a single AWS account. What are the advantages of reconfiguring the single account into multiple AWS accounts? (Choose two.)",
-      "type": "single",
+      "type": "multi",
       "options": [
         "It allows for administrative isolation between different workloads.",
-        "Discounts can be applied on a quarterly basis by submitting cases in the AWS"
+        "Discounts can be applied on a quarterly basis by submitting cases in the AWS Management Console.",
+        "Transitioning objects from Amazon S3 to Amazon S3 Glacier in separate AWS accounts will be less expensive.",
+        "Having multiple accounts reduces the risks associated with malicious activity targeted at a single account.",
+        "Amazon QuickSight offers access to a cost tool that provides application-specific recommendations for environments running in multiple accounts."
       ],
-      "answer": "It allows for administrative isolation between different workloads."
+      "answer": [
+        "It allows for administrative isolation between different workloads.",
+        "Transitioning objects from Amazon S3 to Amazon S3 Glacier in separate AWS accounts will be less expensive."
+      ]
     },
     {
       "id": 1543,
@@ -17914,8 +17927,12 @@
       "question": "A company has a centralized group of users with large file storage requirements that have exceeded the space available on premises. The company wants to extend its file storage capabilities for this group while retaining the performance benefit of sharing content locally. What is the MOST operationally efficient AWS solution for this scenario?",
       "type": "single",
       "options": [
-        "Create an Amazon S3 bucket for each user. Mount each bucket by using an S3 file"
-      ]
+        "Create an Amazon S3 bucket for each user. Mount each bucket by using an S3 file system mounting utility.",
+        "Configure and deploy an AWS Storage Gateway file gateway. Connect each user’s workstation to the file gateway.",
+        "Move each user’s working environment to Amazon WorkSpaces. Set up an Amazon WorkDocs account for each user.",
+        "Deploy an Amazon EC2 instance and attach an Amazon Elastic Block Store (Amazon EBS) Provisioned IOPS volume. Share the EBS volume directly with the users."
+      ],
+      "answer": "Configure and deploy an AWS Storage Gateway file gateway. Connect each user’s workstation to the file gateway."
     },
     {
       "id": 1549,
