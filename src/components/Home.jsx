@@ -59,7 +59,7 @@ const Home = () => {
       <footer className={`py-6 ${darkMode ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-800'}`}>
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-4">
-            <p className="text-lg font-medium">Developed with ❤️ by Sambhav Surthi</p>
+            <p className="text-lg font-medium">Developed by <b>Sambhav Surthi</b>✌️</p>
           </div>
           <div className="flex justify-center space-x-6">
             <a 
